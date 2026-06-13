@@ -1,96 +1,33 @@
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-let currentFilter = "all";
+const apiKey = "54ea5d02884ae5f0e7583d70a6a290cf";
 
-function saveTasks() {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-}
+async function getWeather() {
+    const city = document.getElementById("city").value;
 
-function addTask() {
-    const input = document.getElementById("taskInput");
+    try {
+        const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
+        );
 
-    if (input.value.trim() === "") {
-        alert("Enter a task");
-        return;
-    }
+        const data = await response.json();
 
-    tasks.push({
-        text: input.value,
-        completed: false
-    });
+        if (data.cod != 200) {
+            document.getElementById("result").innerHTML =
+            "City not found!";
+            return;
+        }
 
-    input.value = "";
-    saveTasks();
-    renderTasks();
-}
-
-function deleteTask(index) {
-    tasks.splice(index, 1);
-    saveTasks();
-    renderTasks();
-}
-
-function toggleTask(index) {
-    tasks[index].completed = !tasks[index].completed;
-    saveTasks();
-    renderTasks();
-}
-
-function editTask(index) {
-    let newText = prompt("Edit Task", tasks[index].text);
-
-    if (newText !== null && newText.trim() !== "") {
-        tasks[index].text = newText;
-        saveTasks();
-        renderTasks();
-    }
-}
-
-function filterTasks(filter) {
-    currentFilter = filter;
-    renderTasks();
-}
-
-function renderTasks() {
-    const taskList = document.getElementById("taskList");
-    taskList.innerHTML = "";
-
-    let filteredTasks = tasks;
-
-    if (currentFilter === "active") {
-        filteredTasks = tasks.filter(task => !task.completed);
-    }
-
-    if (currentFilter === "completed") {
-        filteredTasks = tasks.filter(task => task.completed);
-    }
-
-    filteredTasks.forEach(task => {
-        const originalIndex = tasks.indexOf(task);
-
-        const li = document.createElement("li");
-
-        li.innerHTML = `
-            <span class="${task.completed ? 'completed' : ''}">
-                ${task.text}
-            </span>
-
-            <div class="actions">
-                <button onclick="toggleTask(${originalIndex})">
-                    ${task.completed ? 'Undo' : 'Done'}
-                </button>
-
-                <button onclick="editTask(${originalIndex})">
-                    Edit
-                </button>
-
-                <button onclick="deleteTask(${originalIndex})">
-                    Delete
-                </button>
-            </div>
+        document.getElementById("result").innerHTML =
+        `
+        <h2>${data.name}</h2>
+        <p>Temperature: ${data.main.temp} °C</p>
+        <p>Humidity: ${data.main.humidity}%</p>
+        <p>Wind Speed: ${data.wind.speed} m/s</p>
         `;
 
-        taskList.appendChild(li);
-    });
-}
+    } catch (error) {
 
-renderTasks();
+        document.getElementById("result").innerHTML =
+        "Error fetching weather data";
+
+    }
+}
